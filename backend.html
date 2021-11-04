@@ -4,18 +4,110 @@
 <head>
     <meta charset="utf-8">
     <script src="https://unpkg.com/vue@next"></script>
+    <style type="text/css">
+        .tableHeader {
+            width: 100%;
+            display: flex;
+            background-color: #264653;
+            color: white;
+            height: 13%;
+            display: flex;
+            font-size: 4vw;
+            align-items: center;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 300;
+        }
+
+        .tableHeaderCol {
+            width: 25%;
+            text-align: center;
+        }
+
+        .countdownDiv {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            /* height: 33.3%; */
+            height: 13%;
+        }
+
+        .countdownDivContent {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            font-size: 4vw;
+            text-align: center;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 300;
+        }
+
+        .style-1 {
+            background-color: #F8F9FA;
+        }
+
+        .style-2 {
+            background-color: #CED4DA;
+        }
+
+        .warning {
+            color: #E76F51;
+            font-weight: 500;
+        }
+
+        .waiting {
+            color: #2A9D8F;
+            font-weight: 500;
+        }
+
+        .BtnDiv {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .actionBtn {
+            font-size: 3vw;
+            text-align: center;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 300;
+        }
+
+        .textSize {
+            font-size: 3vw;
+        }
+
+        .btnPadding {
+            margin: 1vw;
+        }
+    </style>
 </head>
 
 <body>
     <div id="basic-event">
-        取餐編號：<input type="text" v-model="number" name="number" id="number" /><br />
-        等候時間(分鐘)：<input type="text" v-model="countdownTime" name="countdownTime" id="countdownTime" /><br />
-        <button type="button" id="add" @click="addToCountdownList">送出</button>
-        <button type="button" id="add" @click="removeAllCountdownList">刪除所有</button>
+        <span class="textSize">取餐編號：</span><input type="text" v-model="number" name="number" id="number"
+            class="textSize" v-on:keyup.enter="textBoxNext" /><br />
+        <span class="textSize">等候時間(分鐘)：</span><input type="text" v-model="countdownTime" name="countdownTime"
+            id="countdownTime" class="textSize" v-on:keyup.enter="addToCountdownList"/><br />
+        <button type="button" id="add" @click="addToCountdownList" class="textSize btnPadding">送出</button>
+        <button type="button" id="add" @click="removeAllCountdownList" class="textSize btnPadding">刪除所有</button>
         <hr />
-        <div v-for="item in list">number: {{ item.number }}, countdownTime: {{ item.countdownTime }}, {{
-            this.getTimeLeft(item.createTime, item.countdownTime) }} <button
-                @click="removeOneCountdown(item.number)">訂單完成</button></div>
+        <div class="tableHeader">
+            <div class="tableHeaderCol">取餐編號</div>
+            <div class="tableHeaderCol">等待時間</div>
+            <div class="tableHeaderCol">狀態</div>
+            <div class="tableHeaderCol">動作</div>
+        </div>
+        <div v-for="(item, index) in list" class="countdownDiv" :class="'style-' + ((index % 2) + 1)">
+            <div class="countdownDivContent">
+                <div class="tableHeaderCol">{{ item.number }}</div>
+                <div class="tableHeaderCol">{{ this.getTimeLeft(item.createTime, item.countdownTime) }}</div>
+                <div v-if="this.isOnTime(item.createTime, item.countdownTime)" class="tableHeaderCol waiting"> 準備中
+                </div>
+                <div v-else class="tableHeaderCol warning"> 逾時 </div>
+                <div class="tableHeaderCol BtnDiv"><button class="actionBtn"
+                        @click="removeOneCountdown(item.number)">訂單完成</button></div>
+            </div>
+        </div>
     </div>
 
     <script type="text/javascript">
@@ -62,6 +154,7 @@
                     }
                     this.number++
                     this.setCountdownList(item)
+                    document.getElementById("number").focus(); 
                 },
                 removeOneCountdown(id) {
                     for (let i = 0; i < this.list.length; i++) {
@@ -73,6 +166,28 @@
                     localStorage.clear()
                     this.getCountdownList()
                     this.number = 1
+                },
+                getTimeLeft(createTime, countdownTime) {
+                    let t = (createTime + countdownTime * 1000 * 60) - new Date().getTime()
+                    let allSec = parseInt(t / 1000)
+                    // let flag = '剩餘時間'
+                    // if (allSec < 0) flag = '逾時'
+
+                    allSec = Math.abs(allSec)
+                    let min = parseInt(allSec / 60)
+                    let sec = allSec % 60
+                    // return `${flag}： ${min} 分 ${sec} 秒`
+                    return `${min} 分 ${sec} 秒`
+                },
+                isOnTime(createTime, countdownTime) {
+                    let t = (createTime + countdownTime * 1000 * 60) - new Date().getTime()
+                    let allSec = parseInt(t / 1000)
+                    // let flag = '剩餘時間'
+                    // if (allSec < 0) flag = '逾時'
+                    return allSec >= 0
+                },
+                textBoxNext() {
+                    document.getElementById("countdownTime").focus(); 
                 }
             },
             mounted() {
